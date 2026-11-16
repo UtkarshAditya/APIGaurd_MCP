@@ -11,7 +11,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 FINDING_ID_PREFIX = "F-"
-FINDING_ID_HEX_LENGTH = 6
+FINDING_ID_HEX_LENGTH = 12
 
 FindingSource = Literal["static", "dynamic"]
 

@@ -46,14 +46,14 @@ def test_severity_rank_orders_most_severe_highest() -> None:
 
 
 def test_finding_id_format() -> None:
-    assert re.fullmatch(r"F-[0-9a-f]{6}", compute_finding_id("R", "GET /x", "k"))
+    assert re.fullmatch(r"F-[0-9a-f]{12}", compute_finding_id("R", "GET /x", "k"))
 
 
 def test_finding_id_is_stable_across_runs() -> None:
     # A pinned value: changing the hashing scheme would orphan stored findings
     # and suppressions, so it must be a deliberate, visible change.
     found = compute_finding_id("API2-OPEN-OVERRIDE", "DELETE /users/{id}", "security=[]")
-    assert found == "F-7a1f53"
+    assert found == "F-7a1f5333d6fe"
 
 
 def test_finding_id_changes_with_each_part() -> None:

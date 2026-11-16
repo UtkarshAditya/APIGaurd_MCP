@@ -24,7 +24,7 @@ TOOLS: dict[str, tuple[set[str], set[str]]] = {
     "get_endpoint": ({"spec_id", "endpoint_id"}, set()),
     "run_static_scan": ({"spec_id"}, {"categories", "min_severity"}),
     "list_findings": ({"run_id"}, {"severity", "category", "status", "limit", "cursor"}),
-    "explain_finding": ({"finding_id"}, set()),
+    "explain_finding": ({"finding_id"}, {"run_id"}),
     "suggest_fix": ({"finding_id", "target"}, set()),
     "update_finding_status": ({"finding_id", "status"}, {"note"}),
     "diff_specs": ({"old_spec_id", "new_spec_id"}, set()),
@@ -36,6 +36,8 @@ TOOLS: dict[str, tuple[set[str], set[str]]] = {
     "generate_report": ({"run_id", "format"}, set()),
 }
 DYNAMIC_TOOLS = {"probe_target", "test_bola"}
+# Tools that may reach the network: the dynamic tools, plus load_spec for URL sources.
+OPEN_WORLD_TOOLS = DYNAMIC_TOOLS | {"load_spec"}
 READ_ONLY_TOOLS = {
     "list_endpoints",
     "get_endpoint",
@@ -48,7 +50,7 @@ RESOURCE_URIS = {
     "owasp://api-top10-2023/{id}",
     "rules://catalog",
     "spec://{spec_id}/summary",
-    "finding://{finding_id}",
+    "finding://{finding_id}{?run_id}",
 }
 PROMPTS = {
     "security_review": ["spec_id"],
@@ -63,9 +65,9 @@ SAMPLE_ARGS: dict[str, dict[str, Any]] = {
     "get_endpoint": {"spec_id": "s", "endpoint_id": "GET /x"},
     "run_static_scan": {"spec_id": "s"},
     "list_findings": {"run_id": "r"},
-    "explain_finding": {"finding_id": "F-000000"},
-    "suggest_fix": {"finding_id": "F-000000", "target": "openapi"},
-    "update_finding_status": {"finding_id": "F-000000", "status": "accepted_risk"},
+    "explain_finding": {"finding_id": "F-000000000000"},
+    "suggest_fix": {"finding_id": "F-000000000000", "target": "openapi"},
+    "update_finding_status": {"finding_id": "F-000000000000", "status": "accepted_risk"},
     "diff_specs": {"old_spec_id": "a", "new_spec_id": "b"},
     "probe_target": {"spec_id": "s", "base_url": "http://localhost:8000", "checks": ["cors"]},
     "test_bola": {
@@ -148,7 +150,7 @@ def test_tool_annotations_are_honest(tools: dict[str, Any]) -> None:
         annotations = tool.annotations
         assert annotations.destructive_hint is False, name
         assert annotations.read_only_hint is (name in READ_ONLY_TOOLS), name
-        assert annotations.open_world_hint is (name in DYNAMIC_TOOLS), name
+        assert annotations.open_world_hint is (name in OPEN_WORLD_TOOLS), name
 
 
 def test_enumerated_arguments_are_constrained_in_the_schema(tools: dict[str, Any]) -> None:
@@ -228,7 +230,8 @@ def test_four_resources_one_static_and_three_templates() -> None:
         "owasp://api-top10-2023/API1",
         "rules://catalog",
         "spec://abc/summary",
-        "finding://F-000000",
+        "finding://F-000000000000",
+        "finding://F-000000000000?run_id=r1",
     ],
 )
 def test_every_resource_stub_returns_not_implemented(uri: str) -> None:

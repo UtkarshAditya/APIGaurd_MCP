@@ -56,7 +56,8 @@ def _not_implemented(what: str, phase: str) -> dict[str, Any]:
 
 
 @mcp.tool(
-    annotations=_LOCAL_WRITE,
+    # open_world: a URL source is fetched from the network (once URL loading lands).
+    annotations=_NETWORK,
     description=(
         "Load an OpenAPI 3.0/3.1 spec from a local path or URL and store it. "
         "Returns the spec_id and a summary. Writes to the local database; fetches the "
@@ -136,10 +137,11 @@ def list_findings(
     annotations=_READ_ONLY,
     description=(
         "Explain one finding: a plain-language explanation, an exploit scenario and the "
-        "OWASP mapping."
+        "OWASP mapping. Finding ids are stable across scans; pass run_id to pick a run, "
+        "otherwise the most recent run containing the finding is used."
     ),
 )
-def explain_finding(finding_id: str) -> dict[str, Any]:
+def explain_finding(finding_id: str, run_id: str | None = None) -> dict[str, Any]:
     return _not_implemented("explain_finding", "1b")
 
 
@@ -265,12 +267,15 @@ def spec_summary(spec_id: str) -> dict[str, Any]:
 
 
 @mcp.resource(
-    "finding://{finding_id}",
+    "finding://{finding_id}{?run_id}",
     name="finding",
-    description="One finding in full.",
+    description=(
+        "One finding in full. Optional ?run_id= picks a run; otherwise the most recent "
+        "run containing the finding is used."
+    ),
     mime_type="application/json",
 )
-def finding(finding_id: str) -> dict[str, Any]:
+def finding(finding_id: str, run_id: str | None = None) -> dict[str, Any]:
     return _not_implemented("The finding:// resource", "1d")
 
 
