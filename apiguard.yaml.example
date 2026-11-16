@@ -1,0 +1,22 @@
+# Copy to apiguard.yaml and point the APIGUARD_CONFIG environment variable at it.
+# This file is the only place safety limits can be changed; no tool argument can.
+# With no config file, allowed_hosts defaults to localhost, 127.0.0.1 and ::1.
+
+database: ~/.apiguard/apiguard.db
+output_dir: ./apiguard-reports
+
+dynamic:
+  allowed_hosts: [localhost, 127.0.0.1]   # add hosts you own
+  allow_mutations: false                  # only editable by the user
+  max_requests_per_run: 200
+  requests_per_second: 5
+  request_timeout_seconds: 10
+
+rules:
+  disabled: []
+  severity_overrides: {}
+
+suppressions:
+  - rule: API4-NO-429
+    endpoint: "GET /health"
+    reason: Internal health check behind the gateway
